@@ -1,0 +1,146 @@
+{
+  "info": {
+    "name": "Flask Celery RabbitMQ API",
+    "description": "API endpoints for Flask producer, Celery consumer, and concurrent threading",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Items",
+      "item": [
+        {
+          "name": "Create Item (Producer)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"item\": \"book\"}"
+            },
+            "url": {
+              "raw": "http://localhost:5000/api/items",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "items"]
+            },
+            "description": "Create a new item and send to RabbitMQ\n\nExpected Response: 202 Accepted\n\nThis endpoint:\n- Accepts item as a string (e.g., 'book', 'pen')\n- Inserts the item to SQLite with status=pending\n- Sends the item to RabbitMQ queue\n- Returns HTTP 202 (Accepted)\n\nExample payload:\n{\"item\": \"book\"}"
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Items",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5000/api/items",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "items"]
+            },
+            "description": "Retrieve all items from the database\n\nExpected Response: 200 OK\n\nResponse body: Array of items with id, item, and status"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Concurrent Requests",
+      "item": [
+        {
+          "name": "Make Concurrent Requests (delay=1)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5000/api/concurrent-requests?delay_value=1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "concurrent-requests"],
+              "query": [
+                {
+                  "key": "delay_value",
+                  "value": "1",
+                  "description": "Delay value in seconds for each request to httpbin.org"
+                }
+              ]
+            },
+            "description": "Make 5 concurrent GET requests to httpbin.org/delay/{delay_value} using threading\n\nExpected Response: 200 OK\n\nResponse body: {\"time_taken\": 5.35, \"requests_made\": 5, \"successful_requests\": 5, \"delay_value\": 1}\n\nNOTE: With delay_value=1, total time should be approximately 1 second (concurrent execution)"
+          },
+          "response": []
+        },
+        {
+          "name": "Make Concurrent Requests (delay=2)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5000/api/concurrent-requests?delay_value=2",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "concurrent-requests"],
+              "query": [
+                {
+                  "key": "delay_value",
+                  "value": "2",
+                  "description": "Delay value in seconds for each request"
+                }
+              ]
+            },
+            "description": "Make 5 concurrent GET requests with 2 second delay\n\nExpected Response: 200 OK\n\nResponse body: {\"time_taken\": ~2.X, \"requests_made\": 5, \"successful_requests\": 5, \"delay_value\": 2}"
+          },
+          "response": []
+        },
+        {
+          "name": "Make Concurrent Requests (delay=5)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5000/api/concurrent-requests?delay_value=5",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "concurrent-requests"],
+              "query": [
+                {
+                  "key": "delay_value",
+                  "value": "5",
+                  "description": "Delay value in seconds"
+                }
+              ]
+            },
+            "description": "Make 5 concurrent GET requests with 5 second delay\n\nExpected Response: 200 OK\n\nResponse body: {\"time_taken\": ~5.X, \"requests_made\": 5, \"successful_requests\": 5, \"delay_value\": 5}"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5000/api/health",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "health"]
+        },
+        "description": "Health check endpoint\n\nExpected Response: 200 OK\n\nResponse body: {\"status\": \"healthy\"}"
+      },
+      "response": []
+    }
+  ]
+}

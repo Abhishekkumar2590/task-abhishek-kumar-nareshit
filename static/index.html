@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Manager - Flask Celery App</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="health-check" id="healthCheck">
+            <span class="dot"></span>
+            <span class="health-status">Server Status: <span id="healthStatus">Checking...</span></span>
+        </div>
+
+        <h1>📋 Task Manager</h1>
+        <p class="subtitle">Create and manage tasks with automatic processing</p>
+
+        <div class="error" id="errorMessage"></div>
+
+        <div class="form-group">
+            <input 
+                type="text" 
+                id="itemInput" 
+                placeholder="Enter a task (e.g., book, pen, laptop...)" 
+                autocomplete="off"
+            >
+            <button onclick="createItem()">Add Task</button>
+        </div>
+
+        <div class="items-list">
+            <h2>Tasks</h2>
+            <div id="itemsList">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Loading tasks...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check server health
+        function checkHealth() {
+            fetch('/api/health')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('healthStatus').textContent = data.status;
+                })
+                .catch(error => {
+                    document.getElementById('healthStatus').textContent = 'Offline';
+                });
+        }
+
+        // Load items from the API
+        function loadItems() {
+            fetch('/api/items')
+                .then(response => {
+                    if (!response.ok) throw new Error('Failed to fetch items');
+                    return response.json();
+                })
+                .then(items => {
+                    displayItems(items);
+                })
+                .catch(error => {
+                    showError('Failed to load tasks: ' + error.message);
+                    document.getElementById('itemsList').innerHTML = 
+                        '<div class="empty-state">Error loading tasks</div>';
+                });
+        }
+
+        // Display items in the UI
+        function displayItems(items) {
+            const itemsList = document.getElementById('itemsList');
+            
+            if (!items || items.length === 0) {
+                itemsList.innerHTML = '<div class="empty-state">No tasks yet. Create one to get started! ✨</div>';
+                return;
+            }
+
+            itemsList.innerHTML = items.map(item => `
+                <div class="item">
+                    <div class="item-content">
+                        <div class="item-id">#${item.id}</div>
+                        <div class="item-name">${escapeHtml(item.item)}</div>
+                        <span class="status-badge ${item.status}">${item.status.toUpperCase()}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Create a new item
+        function createItem() {
+            const input = document.getElementById('itemInput');
+            const item = input.value.trim();
+
+            if (!item) {
+                showError('Please enter a task name');
+                return;
+            }
+
+            fetch('/api/items', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ item: item })
+            })
+            .then(response => {
+                if (response.status === 202) {
+                    input.value = '';
+                    showError(''); // Clear error
+                    loadItems(); // Refresh the list
+                    return;
+                }
+                return response.json().then(data => {
+                    throw new Error(data.error || 'Failed to create task');
+                });
+            })
+            .catch(error => {
+                showError('Error: ' + error.message);
+            });
+        }
+
+        // Show error message
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            if (message) {
+                errorDiv.textContent = message;
+                errorDiv.classList.add('show');
+                setTimeout(() => {
+                    errorDiv.classList.remove('show');
+                }, 4000);
+            } else {
+                errorDiv.classList.remove('show');
+            }
+        }
+
+        // Escape HTML to prevent XSS
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Allow Enter key to create item
+        document.getElementById('itemInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                createItem();
+            }
+        });
+
+        // Initial load
+        checkHealth();
+        loadItems();
+
+        // Refresh items every 2 seconds
+        setInterval(loadItems, 2000);
+        
+        // Check health every 5 seconds
+        setInterval(checkHealth, 5000);
+    </script>
+</body>
+</html>

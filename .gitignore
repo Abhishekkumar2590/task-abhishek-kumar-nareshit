@@ -1,0 +1,52 @@
+# Virtual Environment
+venv/
+env/
+ENV/
+.venv
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Database
+*.db
+tasks.db
+celery_results.db
+
+# Environment variables
+.env
+.env.local
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project specific
+.coverage
+htmlcov/
+
+# Flask / Celery
+instance/
+*.sqlite3
+*.db-journal
+celerybeat-schedule
+celerybeat.pid
+*.pid
